@@ -17,7 +17,7 @@ namespace _2048_Solver
                 for (int col = 0; col <= 3; col++)
                 {
                     Console.Write("|");
-                    Console.Write((game[row, col]?.ToString() ?? "").PadLeft(4));
+                    Console.Write((game.Grid[row, col]?.ToString() ?? "").PadLeft(4));
                     if (col == 3)
                     {
                         Console.WriteLine("|");
@@ -34,20 +34,20 @@ namespace _2048_Solver
         {
             Game game = Game.NewGame();
 
-            IStrategy strategy = new MonteCarloStrategy(100);
-            Func<bool> gameWonCondition = () => game.AllValues.Any(v => v >= 2048);
+            IStrategy strategy = new MonteCarloStrategy(10);
+            Func<bool> endCondition = () => game.Grid.AllValues.Any(v => v >= 2048);
 
             Console.Clear();
             Display(game);
             Thread.Sleep(10);
 
-            game.PlayUntilConditionMetOrGameOver(strategy, () => false, () =>
+            game.PlayUntilConditionMetOrGameOver(strategy, endCondition, () =>
             {
                 Display(game);
                 Thread.Sleep(10);
             });
 
-            bool won = gameWonCondition();
+            bool won = game.Grid.AllValues.Any(v => v >= 2048);
             System.Console.WriteLine(won ? "You won!" : "You lost!");
         }
     }

@@ -11,7 +11,7 @@ namespace _2048_Solver
             while (remainingDirections.Count > 0)
             {
                 direction = RandomUtility.PickOneAndRemove(remainingDirections);
-                if (game.TryMove(direction))
+                if (game.TryPlayMove(direction))
                     return true;
             }
 

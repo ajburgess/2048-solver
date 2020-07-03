@@ -26,7 +26,7 @@ namespace _2048_Solver
                 for (int i = 0; i < size; i++)
                 {
                     Game clone = game.Clone();
-                    if (!clone.TryMove(d))
+                    if (!clone.TryPlayMove(d))
                         break;
                     clone.PlayUntilConditionMetOrGameOver(randomStrategy, null, null);
                     outcomes.Add((d, clone));
