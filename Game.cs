@@ -10,7 +10,17 @@ namespace _2048_Solver
         private int score;
         private int moves;
 
+        public int? this[int row, int col]
+        {
+            get
+            {
+                int value = grid[row, col];
+                return value != 0 ? value : (int?)null;
+            }
+        }
+
         public int Score => score;
+        public int Moves => moves;
 
         public static Game NewGame()
         {
@@ -27,24 +37,41 @@ namespace _2048_Solver
             grid = new int[4, 4];
         }
 
-        public void PlayUntilEnd()
+        public bool Contains(int value) => PopulatedSquares.Any(s => s.Value == value);
+
+        public IEnumerable<int> AllValues => PopulatedSquares.Select(s => s.Value);
+
+        public bool PlayUntilConditionMetOrGameOver(IStrategy strategy, Func<bool> condition, Action afterMove)
         {
             while (true)
             {
-                bool moved = false;
-                List<Direction> remainingDirections = new List<Direction>((Direction[])Enum.GetValues(typeof(Direction)));
-                while (remainingDirections.Count > 0)
-                {
-                    Direction direction = RandomUtility.PickOneAndRemove(remainingDirections);
-                    bool allowed = TryMove(direction);
-                    if (allowed)
-                    {
-                        moved = true;
-                        break;
-                    }
-                }
-                if (!moved) break;
+                // Stop if condition is met
+                if (condition != null && condition())
+                    return true;
+
+                // Pick next move, using the supplied strategy
+                Game clone = this.Clone();
+                bool canMove = strategy.TryPickNextMove(clone, out Direction direction);
+
+                // Stop if no move is possible
+                if (!canMove)
+                    return false;
+
+                // Move in the chosen direction
+                Move(direction);
+
+                // Allow caller to perform an action after each move
+                if (afterMove != null)
+                    afterMove();
             }
+        }
+
+        public void Move(Direction direction)
+        {
+            bool ok = TryMove(direction);
+
+            if (!ok)
+                throw new Exception("Invalid move");
         }
 
         private IEnumerable<(int Row, int Col)> EmptyPositions =>
@@ -284,30 +311,6 @@ namespace _2048_Solver
             }
 
             return allowed;
-        }
-
-        public bool IsWon => PopulatedSquares.Any(s => s.Value >= 2048);
-
-        public void Display()
-        {
-            Console.WriteLine($"Score: {score} Moves: {moves}");
-            for (int row = 0; row < 4; row++)
-            {
-                Console.WriteLine("+----+----+----+----+");
-                for (int col = 0; col < 4; col++)
-                {
-                    Console.Write("|");
-                    Console.Write(grid[row, col].ToString().PadLeft(4).Replace("   0", "    "));
-                    if (col == 3)
-                    {
-                        Console.WriteLine("|");
-                    }
-                }
-                if (row == 3)
-                {
-                    Console.WriteLine("+----+----+----+----+");
-                }
-            }
         }
     }
 }

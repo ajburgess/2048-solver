@@ -7,64 +7,48 @@ namespace _2048_Solver
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Display(Game game)
         {
-            Console.Clear();
-
-            Direction[] allDirections = (Direction[])Enum.GetValues(typeof(Direction));
-
-            Game game = Game.NewGame();
-
-            while (true) {
-                Console.SetCursorPosition(0, 0);
-                game.Display();
-                Pause();
-
-                if (game.IsWon)
-                    break;
-
-                var futures = new List<(Direction direction, Game game)>();
-
-                foreach (Direction direction in allDirections)
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine($"Score: {game.Score} Moves: {game.Moves}");
+            for (int row = 0; row <= 3; row++)
+            {
+                Console.WriteLine("+----+----+----+----+");
+                for (int col = 0; col <= 3; col++)
                 {
-                    for (int i = 0; i < 10; i++)
+                    Console.Write("|");
+                    Console.Write((game[row, col]?.ToString() ?? "").PadLeft(4));
+                    if (col == 3)
                     {
-                        Game clone = game.Clone();
-                        bool allowed = clone.TryMove(direction);
-                        if (!allowed)
-                            break;
-                        clone.PlayUntilEnd();
-                        futures.Add((direction, clone));
+                        Console.WriteLine("|");
                     }
                 }
-
-                if (futures.Count == 0)
-                    break;
-
-                if (futures.Count > 0)
+                if (row == 3)
                 {
-                    Direction bestDirection = futures
-                        .GroupBy(f => f.direction)
-                        .OrderByDescending(g => g.Average(f => f.game.Score))
-                        .First().Key;
-
-                    game.TryMove(bestDirection);
+                    Console.WriteLine("+----+----+----+----+");
                 }
-            }
-
-            if (game.IsWon)
-            {
-                Console.WriteLine("You won!");
-            }
-            else
-            {
-                Console.WriteLine("You lost!");
             }
         }
 
-        static void Pause()
+        static void Main(string[] args)
         {
-            Thread.Sleep(20);
+            Game game = Game.NewGame();
+
+            IStrategy strategy = new MonteCarloStrategy(100);
+            Func<bool> gameWonCondition = () => game.AllValues.Any(v => v >= 2048);
+
+            Console.Clear();
+            Display(game);
+            Thread.Sleep(10);
+
+            game.PlayUntilConditionMetOrGameOver(strategy, () => false, () =>
+            {
+                Display(game);
+                Thread.Sleep(10);
+            });
+
+            bool won = gameWonCondition();
+            System.Console.WriteLine(won ? "You won!" : "You lost!");
         }
     }
 }
