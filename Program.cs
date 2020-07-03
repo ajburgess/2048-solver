@@ -61,7 +61,7 @@ namespace _2048_Solver
         {
             Game game = Game.NewGame();
 
-            IStrategy strategy = new MonteCarloStrategy(5);
+            IStrategy strategy = new MonteCarloStrategy(10);
             Func<bool> endCondition = () => game.Grid.AllValues.Any(v => v >= 2048);
 
             Console.Clear();
