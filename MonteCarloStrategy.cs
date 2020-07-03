@@ -17,7 +17,7 @@ namespace _2048_Solver
             this.size = size;
         }
 
-        public bool TryPickNextMove(Game game, out Direction direction)
+        public bool TryMove(Game game, out Direction direction)
         {
             var outcomes = new List<(Direction direction, Game game)>();
 
@@ -26,7 +26,7 @@ namespace _2048_Solver
                 for (int i = 0; i < size; i++)
                 {
                     Game clone = game.Clone();
-                    if (!clone.TryPlayMove(d))
+                    if (!clone.TryMove(d))
                         break;
                     clone.PlayUntilConditionMetOrGameOver(randomStrategy, null, null);
                     outcomes.Add((d, clone));
@@ -43,6 +43,8 @@ namespace _2048_Solver
                 .GroupBy(f => f.direction)
                 .OrderByDescending(g => g.Average(f => f.game.Score))
                 .First().Key;
+
+            game.TryMove(direction);
 
             return true;
         }

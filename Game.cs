@@ -29,7 +29,7 @@ namespace _2048_Solver
             grid = new Grid();
         }
 
-        public bool PlayUntilConditionMetOrGameOver(IStrategy strategy, Func<bool> condition, Action afterMove)
+        public bool PlayUntilConditionMetOrGameOver(IStrategy strategy, Func<bool> condition, Action<Direction> afterMove)
         {
             while (true)
             {
@@ -37,24 +37,20 @@ namespace _2048_Solver
                 if (condition != null && condition())
                     return true;
 
-                // Pick next move, using the supplied strategy
-                Game clone = this.Clone();
-                bool canMove = strategy.TryPickNextMove(clone, out Direction direction);
+                // Pick and play next move, using the supplied strategy
+                bool canMove = strategy.TryMove(this, out Direction direction);
 
-                // Stop if no move is possible
+                // Stop if no move was possible
                 if (!canMove)
                     return false;
 
-                // Move in the chosen direction
-                TryPlayMove(direction);
-
-                // Allow caller to perform an action after each move
+                // Tell caller the direction of the move just played
                 if (afterMove != null)
-                    afterMove();
+                    afterMove(direction);
             }
         }
 
-        public bool TryPlayMove(Direction direction)
+        public bool TryMove(Direction direction)
         {
             bool ok = grid.TryShift(direction, out int extraPoints);
 

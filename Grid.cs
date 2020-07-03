@@ -7,7 +7,6 @@ namespace _2048_Solver
     public class Grid
     {
         private int[,] cells;
-        private Action<int> doubleUp;
 
         public Grid()
         {

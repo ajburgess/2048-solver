@@ -9,8 +9,9 @@ namespace _2048_Solver
     {
         static void Display(Game game)
         {
+            int maxValue = game.Grid.AllValues.Max();
             Console.SetCursorPosition(0, 0);
-            Console.WriteLine($"Score: {game.Score} Moves: {game.Moves}");
+            Console.WriteLine($"Score: {game.Score} Moves: {game.Moves} Max: {maxValue}");
             for (int row = 0; row <= 3; row++)
             {
                 Console.WriteLine("+----+----+----+----+");
@@ -30,21 +31,49 @@ namespace _2048_Solver
             }
         }
 
+        private static string GetDirectionSymbol(Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.Left: return "\u2190";
+                case Direction.Right: return "\u2192";
+                case Direction.Up: return "\u2191";
+                case Direction.Down: return "\u2193";
+                default: return "?";
+            }
+        }
+
+        private static void DisplayNextMove(Direction direction)
+        {
+            Console.WriteLine();
+            string symbol = GetDirectionSymbol(direction);
+            System.Console.Write($"Next move: {symbol}");
+            Console.WriteLine();
+            Console.WriteLine();
+        }
+
+        private static void WaitForKeyPress()
+        {
+            Console.ReadKey();
+        }
+
         static void Main(string[] args)
         {
             Game game = Game.NewGame();
 
-            IStrategy strategy = new MonteCarloStrategy(10);
+            IStrategy strategy = new MonteCarloStrategy(5);
             Func<bool> endCondition = () => game.Grid.AllValues.Any(v => v >= 2048);
 
             Console.Clear();
-            Display(game);
-            Thread.Sleep(10);
 
-            game.PlayUntilConditionMetOrGameOver(strategy, endCondition, () =>
+            Display(game);
+
+            game.PlayUntilConditionMetOrGameOver(strategy, endCondition, d =>
             {
+                DisplayNextMove(d);
+                WaitForKeyPress();
                 Display(game);
-                Thread.Sleep(10);
+                //Thread.Sleep(10);
             });
 
             bool won = game.Grid.AllValues.Any(v => v >= 2048);
