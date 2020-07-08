@@ -61,7 +61,7 @@ namespace _2048_Solver
         {
             Game game = Game.NewGame();
 
-            IStrategy strategy = new MonteCarloStrategy(10);
+            IStrategy strategy = new MonteCarloStrategy(25);
             Func<bool> endCondition = () => game.Grid.AllValues.Any(v => v >= 2048);
 
             Console.Clear();
@@ -70,10 +70,10 @@ namespace _2048_Solver
 
             game.PlayUntilConditionMetOrGameOver(strategy, endCondition, d =>
             {
-                DisplayNextMove(d);
-                WaitForKeyPress();
+                //DisplayNextMove(d);
+                //WaitForKeyPress();
                 Display(game);
-                //Thread.Sleep(10);
+                //Thread.Sleep(50);
             });
 
             bool won = game.Grid.AllValues.Any(v => v >= 2048);
