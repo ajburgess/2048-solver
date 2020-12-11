@@ -1,52 +1,72 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace _2048_Solver
 {
     public class MonteCarloStrategy : IStrategy
     {
-        private static Direction[] allDirections = (Direction[])Enum.GetValues(typeof(Direction));
-
-        private IStrategy randomStrategy;
         private int size;
 
         public MonteCarloStrategy(int size)
         {
-            this.randomStrategy = new RandomStrategy();
             this.size = size;
         }
 
-        public bool TryMove(Game game, out Direction direction)
+        private int PlayRandomUntilGameOver(Grid grid)
         {
-            var outcomes = new List<(Direction direction, Game game)>();
+            int score = 0;
 
-            foreach (Direction d in allDirections)
+            while (grid.TryRandomShift(out Direction _, out int points))
             {
-                for (int i = 0; i < size; i++)
+                score += points;
+                
+                if (grid.Contains2048)
+                    break;
+
+                grid.AddNewNumberInEmptyCell();
+            }
+
+            return score;
+        }
+
+        public Direction PickBestMove(Grid grid)
+        {
+            Stack<Grid> grids = new Stack<Grid>();
+            var outcomes = new List<(Direction direction, int score)>();
+
+            foreach (Direction direction in Grid.AllDirections)
+            {
+                grids.Push(grid);
+                grid = grid.Clone();
+                if (grid.TryShift(direction, out int score))
                 {
-                    Game clone = game.Clone();
-                    if (!clone.TryMove(d))
-                        break;
-                    clone.PlayUntilConditionMetOrGameOver(randomStrategy, null, null);
-                    outcomes.Add((d, clone));
+                    for (int i = 0; i < size; i++)
+                    {
+                        int score2 = score;
+                        grids.Push(grid);
+                        grid = grid.Clone();
+                        grid.AddNewNumberInEmptyCell();
+                        score2 += PlayRandomUntilGameOver(grid);
+                        outcomes.Add((direction, score2));
+                        grid = grids.Pop();
+                    }
                 }
+                grid = grids.Pop();
             }
 
             if (outcomes.Count == 0)
             {
-                direction = Direction.Up;
-                return false;
+                return Direction.None;
             }
 
-            direction = outcomes
-                .GroupBy(f => f.direction)
-                .OrderByDescending(g => g.Average(f => f.game.Score))
-                .First().Key;
-
-            game.TryMove(direction);
-
-            return true;
+            var averages = outcomes
+                .GroupBy(o => o.direction)
+                .Select(g => new { direction = g.Key, averageScore = g.Average(o => o.score) })
+                .OrderByDescending(g => g.averageScore);
+ 
+            return averages.First().direction;
         }
     }
 }

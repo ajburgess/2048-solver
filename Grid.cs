@@ -1,11 +1,14 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text;
 
 namespace _2048_Solver
 {
     public class Grid
     {
+        public static readonly Direction[] AllDirections = { Direction.Up, Direction.Right, Direction.Down, Direction.Left };
+
         private int[,] cells;
 
         public Grid()
@@ -22,9 +25,34 @@ namespace _2048_Solver
             }
         }
 
-        public bool Contains(int value) => PopulatedCells.Any(c => c.Value == value);
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            
+            for (int row = 0; row <= 3; row++)
+            {
+                sb.AppendLine("+----+----+----+----+");
+                for (int col = 0; col <= 3; col++)
+                {
+                    sb.Append("|");
+                    sb.Append((this[row, col]?.ToString() ?? "").PadLeft(4));
+                    if (col == 3)
+                    {
+                        sb.AppendLine("|");
+                    }
+                }
+                if (row == 3)
+                {
+                    sb.AppendLine("+----+----+----+----+");
+                }
+            }
 
-        public IEnumerable<int> AllValues => PopulatedCells.Select(c => c.Value);
+            return sb.ToString();
+        }
+
+        public bool Contains(int value) => AllCells.Any(c => c.Value == value);
+
+        public IEnumerable<int> AllValues => AllCells.Select(c => c.Value);
 
         private IEnumerable<(int Row, int Col)> EmptyCells =>
             AllCells.Where(c => c.Value == 0).Select(c => (c.Row, c.Col));
@@ -75,6 +103,8 @@ namespace _2048_Solver
             return Enumerable.Range(0, 4).All(row => cells[row, col] == 0);
         }
 
+        public bool Contains2048 => this.AllValues.Any(v => v >= 2048);
+
         public bool TryShift(Direction direction, out int points)
         {
             switch (direction)
@@ -87,11 +117,25 @@ namespace _2048_Solver
                     return TryShiftUp(out points);
                 case Direction.Down:
                     return TryShiftDown(out points);
+                default:
+                    throw new Exception($"Cannot shift in direction: {direction}");
+            }
+        }
+
+        public bool TryRandomShift(out Direction direction, out int points)
+        {
+            List<Direction> remainingDirections = new List<Direction>(Grid.AllDirections);
+            while (remainingDirections.Count > 0)
+            {
+                direction = RandomUtility.PickOneAndRemove(remainingDirections);
+                if (this.TryShift(direction, out points))
+                    return true;
             }
 
+            direction = Direction.None;
             points = 0;
             return false;
-        }
+        } 
 
         private bool TryShiftLeft(out int points)
         {
